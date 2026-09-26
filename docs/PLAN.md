@@ -182,15 +182,36 @@ graphe. C'est aussi la seule reponse a un SAUT de plusieurs cartes (zaap, rappel
 
 Reste pour clore G1 : brancher sur le vrai `grab`/backend et valider en jeu.
 
-### G2 — Engager un combat
+### G2 — Engager un combat  *(hors-ligne : fait ; reste la validation en jeu)*
 
-`perception/monsters.py` (72 ko) et `perception/entities.py` sont deja portes. Manque la
-logique d'engagement, aujourd'hui dans `farming/runner.py` et `bot/orchestrator.py` :
-reperer un groupe, juger s'il est engageable, cliquer, confirmer l'entree en combat.
+| Brique | Etat |
+|---|---|
+| Detection de groupes (`perception/monsters.py`, 72 ko) | deja la |
+| Cliquer et confirmer (`world/engage.Engager`) | **ecrit, 16 tests** |
+| Verdict differe (`Engager.settle`) | **ecrit, teste** |
+| Liste noire plafonnee (`world/engage.FailedSpots`) | **ecrit, teste** |
+| Choisir QUEL groupe engager | ⬜ candidat `noul` pour Jev |
 
-A extraire de la meme facon que `travel` — la decision d'engager est un bon candidat pour
-une question `noul` a Jev (« ce groupe vaut-il d'etre engage ? »), une fois la perception
-branchee.
+La verification n'est pas un confort : la detection par mouvement attrape aussi **les
+autres joueurs**, que rien de visuel ne distingue d'un groupe. Sans controle, le bot
+clique un joueur qui passe, indefiniment, en croyant engager. La timeline tranche — elle
+n'existe qu'en combat.
+
+Le defaut garde ici n'est pas « le clic rate », c'est le **verdict trop tot**. Un
+depassement d'echeance rend `PENDING`, jamais `MISSED` : un groupe lointain demande une
+longue marche plus l'ecran de placement, et le combat peut demarrer juste apres. Conclure
+tout de suite ecrivait un faux negatif au journal *et* condamnait l'endroit pour toute la
+session — sur les groupes LOINTAINS et GROS, soit exactement ceux qu'il fallait apprendre
+a preferer. Au cycle suivant, `settle(in_combat=True)` rend `LATE` et non `STARTED` : un
+groupe qui passe peut agresser, rien ne prouve que le combat vienne du clic.
+
+Verifie par MUTATION : conclure a l'echeance tue les trois tests du verdict differe.
+
+`EngageResult.waited` rend le delai reel, qui etait jete. `ENGAGE_TIMEOUT` vaut 8 s par
+ANALOGIE, jamais par mesure ; ce chiffre est ce qui permettra de le poser sur des donnees.
+
+Reste : **choisir** quel groupe engager. C'est la premiere question `noul` naturelle pour
+Jev (« ce groupe vaut-il d'etre engage ? »), avec `monsters.best_group` comme reference.
 
 ### G3 — Gagner le combat  *(bloque par D1)*
 

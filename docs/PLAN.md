@@ -144,7 +144,7 @@ d'importance :
 4. puis, une fois les trois acquis : **bout en bout** — prendre une quete, la faire, la
    rendre au bon PNJ.
 
-### G1 — Se deplacer  *(en cours)*
+### G1 — Se deplacer  *(hors-ligne : fait ; reste la validation en jeu)*
 
 | Brique | Etat |
 |---|---|
@@ -152,7 +152,8 @@ d'importance :
 | Ou cliquer pour sortir (`world/travel.edge_point`) | **extrait, teste** |
 | Juger le deplacement (`world/travel.judge_move`) | **extrait, teste** |
 | Lecture des coordonnees (`perception/coordinates`) | deja la |
-| Boucle : cliquer, attendre, confirmer, rembobiner | **a ecrire** |
+| Boucle : cliquer, attendre, confirmer, rembobiner (`world/walker.py`) | **ecrit, 16 tests** |
+| Trajet vers une carte cible (`Walker.travel_to`) | **ecrit, teste** |
 
 `navigation.py` vivait sous `farming/` sans rien en importer : le ranger la rendait le
 deplacement inaccessible a tout ce qui n'etait pas de la recolte. Il est maintenant sous
@@ -165,8 +166,21 @@ parce que la **derive** est le mode de panne qui ne se voit pas : cliquer un bor
 marcher le personnage, un obstacle le fait sortir ailleurs, la comparaison d'images dit
 « reussi », et le circuit repart d'une carte decalee qu'il ne rattrapera jamais.
 
-Reste : la boucle qui enchaine clic -> attente -> confirmation -> rembobinage, sans la
-session de recolte. Puis un `Walker` qui suit un trajet du graphe jusqu'a une carte cible.
+`Walker` scrute au lieu d'attendre. Un delai FIXE est le pire mode de panne du circuit :
+il couvre deux choses de duree tres variable -- la MARCHE jusqu'au bord, puis le
+chargement -- et quand il ne suffit pas, la verification tombe sur l'ancienne carte,
+conclut « sans effet », rembobine la route, et la carte charge quand meme. Le circuit
+reste decale d'un cran, definitivement. Le signal d'arret ne coute rien : ce sont les
+coordonnees, qu'il faut lire de toute facon pour juger le pas.
+
+Verifie par MUTATION : remplacer l'attente adaptative par un retour immediat tue
+`test_a_slow_map_is_still_a_success`, et lui seul.
+
+`travel_to` recalcule le trajet a chaque pas plutot que de le suivre en aveugle -- c'est
+ce qui rend une derive rattrapable, la sortie trompeuse venant d'etre enregistree dans le
+graphe. C'est aussi la seule reponse a un SAUT de plusieurs cartes (zaap, rappel).
+
+Reste pour clore G1 : brancher sur le vrai `grab`/backend et valider en jeu.
 
 ### G2 — Engager un combat
 

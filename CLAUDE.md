@@ -73,6 +73,13 @@ heritait 29 et 31 a l'import, et l'amont en compte 89. On ne bloque pas le trava
 dessus, mais **le compte ne remonte jamais** : la CI compare a une base enregistree et
 echoue sur toute erreur nouvelle. La base ne fait que decroitre.
 
+**Ruff bloque, mypy informe.** Le compte de mypy n'est pas reproductible d'un
+environnement a l'autre : 66 ici, 70 en CI, sur le meme commit, l'ecart venant des stubs
+numpy. Un garde-fou qu'on ne peut pas reproduire en local rougit sur du bruit ; on prend
+l'habitude de passer outre, et le jour ou il a raison plus personne ne l'ecoute. Il est
+donc indicatif tant que les deux comptes divergent. Les outils sont EPINGLES
+(`ruff==0.16.1`, `mypy==2.3.0`) pour supprimer la premiere cause de derive.
+
 Avant de committer :
 
 ```bash

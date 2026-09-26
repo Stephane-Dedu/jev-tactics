@@ -23,8 +23,12 @@ ocr = ["pytesseract>=0.3.10"]
 action = ["pydirectinput>=1.0"]
 dev = [
     "pytest>=8.0",
-    "ruff>=0.3",
-    "mypy>=1.9",
+    # EPINGLES, pas bornes. Le depot a deja vu le meme code passer de 0 a 70 erreurs sur
+    # une simple mise a jour de ruff : un lint dont le resultat depend de la version
+    # installee ne peut pas servir de garde-fou, et un CLIQUET encore moins -- il compare
+    # un compte a une base, donc les deux doivent etre produits par le meme outil.
+    "ruff==0.16.1",
+    "mypy==2.3.0",
 ]
 
 [build-system]

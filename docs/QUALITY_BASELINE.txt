@@ -1,8 +1,17 @@
 # Base du cliquet qualite. Voir CLAUDE.md section 3.
-# La CI echoue sur toute erreur NOUVELLE. Ces comptes ne doivent que DECROITRE.
-# Regenerer apres une baisse :
+#
+# ruff est BLOQUANT en CI : son compte est stable et reproductible.
+#
+# mypy est INDICATIF. Son compte depend de l'environnement -- 66 sur la machine de
+# developpement, 70 en CI, sur le meme commit -- parce que les stubs numpy changent avec
+# la version installee. Un garde-fou qu'on ne peut pas reproduire en local rougit sur du
+# bruit, on prend l'habitude de passer outre, et il cesse d'etre un temoin. Les outils
+# sont epingles depuis (ruff 0.16.1, mypy 2.3.0) ; mypy redeviendra bloquant quand les
+# deux comptes coincideront.
+#
+# Ces comptes ne doivent que DECROITRE. Regenerer apres une baisse :
 #   ruff check . ; mypy --strict src/
 #
-# Mesure le 2026-09-26, Python 3.11.9, ruff/mypy de .venv
+# Mesure le 2026-09-26, Python 3.11.9
 ruff=27
 mypy=66

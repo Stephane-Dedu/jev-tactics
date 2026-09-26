@@ -25,7 +25,6 @@ import argparse
 from pathlib import Path
 
 import cv2
-import matplotlib.pyplot as plt
 import numpy as np
 
 from jev_tactics.calibration import (
@@ -41,6 +40,13 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def _clicks(img_rgb: np.ndarray, n: int, title: str) -> np.ndarray:
+    # matplotlib est importe ICI, pas en tete de fichier. Il n'est ni une dependance ni
+    # un extra declare, et il ne sert qu'a cette saisie interactive -- or `--help` doit
+    # repondre sans lui. `test_scripts.py` tape la commande pour les vingt-et-un scripts :
+    # c'est ce test qui a montre que `calibrate.py --help` echouait sur une installation
+    # propre, la ou il n'echouait pas sur une machine de developpement.
+    import matplotlib.pyplot as plt
+
     fig = plt.figure(figsize=(16, 9))
     plt.imshow(img_rgb)
     plt.title(title)

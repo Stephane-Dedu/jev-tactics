@@ -81,6 +81,20 @@ mypy --strict src/                # idem
 pytest -q                         # 667 passes, 217 sautes, 0 echec
 ```
 
+**Reproduire la CI sans attendre la CI.** Elle n'installe aucun extra ; la machine de
+developpement les a tous. Pour voir ce qu'elle verra, sans round-trip :
+
+```bash
+mkdir -p /tmp/blockers
+for m in pytesseract matplotlib pydirectinput typesafe_sdk torch ultralytics; do
+  echo "raise ImportError('$m')" > /tmp/blockers/$m.py
+done
+PYTHONPATH=/tmp/blockers:src pytest -q
+```
+
+Deux defauts trouves de cette facon apres deux CI rouges : un extra importe en tete de
+fichier, et un script dont `--help` exigeait matplotlib.
+
 **Le lint est un temoin, pas une formalite.** Le defaut le plus couteux trouve dans la
 couche de decision -- chaque plan s'annoncant avec ses PA intacts alors qu'il les
 depensait tous -- etait signale par `RUF021`, une regle deja activee dans `pyproject.toml`.

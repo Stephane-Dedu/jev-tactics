@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import os
 import re
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -37,29 +38,44 @@ from pydantic import BaseModel
 _TESSERACT: Any = None
 
 
-def _tesseract() -> Any:
-    """L'oracle hors-ligne, charge au premier besoin.
+_TESSERACT_TRIED = False
 
-    Leve un message actionnable plutot qu'un `ImportError` nu : on n'arrive ici que si le
-    classifieur maison a rendu la main -- cas deja rare -- et il faut savoir que c'est un
-    extra qui manque, non le paquet qui est casse.
+
+def _tesseract() -> Any:
+    """L'oracle hors-ligne, charge au premier besoin. -> le module, ou None s'il manque.
+
+    REND None PLUTOT QUE DE LEVER, et c'est le contrat du module, pas une commodite.
+    `TestRefusalIsTheContract` le dit : un repli a 1.0 ferait engager un personnage
+    mourant, un repli a 0.0 desactiverait la chasse pour toujours, et **les deux sont
+    pires que « on ne sait pas »**. Une exception est une troisieme reponse, pire encore :
+    elle arrete la session pour une condition que tous les appelants savent traiter.
+
+    Une premiere version levait ici un `RuntimeError` bien redige. Il transformait
+    « lecture impossible » en panne -- exactement l'inversion que `read_stat` corrige
+    quelques lignes plus bas pour les ROIs hors capture.
+
+    L'absence est signalee UNE FOIS par `warnings.warn` : on ne veut pas d'un repli muet,
+    mais on n'en veut pas non plus a chaque glyphe.
     """
-    global _TESSERACT
-    if _TESSERACT is None:
-        try:
-            import pytesseract
-        except ImportError as exc:
-            raise RuntimeError(
-                'pytesseract absent : c\'est le repli OCR, installe par '
-                '`pip install -e ".[ocr]"` (plus le binaire Tesseract). Le chemin normal '
-                "est le classifieur maison ; si l'on arrive ici, ses gabarits n'ont pas "
-                "pu etre charges."
-            ) from exc
-        cmd = os.environ.get(
-            "TESSERACT_CMD", r"C:\Program Files\Tesseract-OCR\tesseract.exe")
-        if Path(cmd).exists():
-            pytesseract.pytesseract.tesseract_cmd = cmd
-        _TESSERACT = pytesseract
+    global _TESSERACT, _TESSERACT_TRIED
+    if _TESSERACT_TRIED:
+        return _TESSERACT
+    _TESSERACT_TRIED = True
+    try:
+        import pytesseract
+    except ImportError:
+        warnings.warn(
+            'pytesseract absent : le repli OCR est desactive, les glyphes rejetes par '
+            'le classifieur maison se liront « inconnu ». Installer avec '
+            '`pip install -e ".[ocr]"` (plus le binaire Tesseract).',
+            RuntimeWarning, stacklevel=2,
+        )
+        return None
+    cmd = os.environ.get(
+        "TESSERACT_CMD", r"C:\Program Files\Tesseract-OCR\tesseract.exe")
+    if Path(cmd).exists():
+        pytesseract.pytesseract.tesseract_cmd = cmd
+    _TESSERACT = pytesseract
     return _TESSERACT
 
 
@@ -253,9 +269,12 @@ def _ocr(binary: NDArray[np.uint8]) -> str:
     # passaient deja. C'est le seul mode qui lit les nombres centres de l'ATH a un seul
     # nombre : mesure sur « 88 » et « 69 », les modes 6/7/8/10 rendent tous la chaine
     # vide. Le fallback etait donc muet exactement la ou le classifieur l'appelait.
+    tess = _tesseract()
+    if tess is None:
+        return ""          # pas d'oracle : lecture impossible, pas une erreur
     for psm in (7, 8, 10, 13):  # ligne, mot, caractere unique, ligne brute
         cfg = f"--psm {psm} -c tessedit_char_whitelist=0123456789"
-        txt = _tesseract().image_to_string(binary, config=cfg)
+        txt = tess.image_to_string(binary, config=cfg)
         if any(c.isdigit() for c in txt):
             return txt.strip()
     return ""

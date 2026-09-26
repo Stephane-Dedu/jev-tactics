@@ -291,6 +291,8 @@ amont visent a MASQUER le panneau comme source de bruit visuel.
 | Directeur : quelle action ensuite (`quest/director.py`) | **ecrit, 25 tests** |
 | Deroule bout en bout (`plan_ahead`) | **ecrit, teste** |
 | Executeur : jouer la quete, gerer les pannes (`quest/runner.py`) | **ecrit, 11 tests** |
+| Boucle de combat vivante (`bot/fight.py`) | **ecrit, 12 tests** |
+| Gestionnaires reels (`quest/handlers.py`) | **ecrit, 11 tests** |
 | Lecture du journal de quetes | ⬜ **bloque : aucune capture** |
 | Detection des PNJ sur la carte | ⬜ **bloque : aucune capture** |
 | Fenetre de dialogue, choix de replique | ⬜ **bloque : aucune capture** |
@@ -342,6 +344,35 @@ commencer, et le directeur redemandait le meme trajet a chaque tour. La reponse 
 desormais de la PHASE : avant l'acceptation et au rendu rien n'est sautable -- la quete
 est abandonnee en le disant -- et seuls les objectifs peuvent etre passes.
 Verifie par mutation.
+
+#### La boucle de combat, et les tours MUETS
+
+`bot/fight.py` relie enfin percevoir / decider / executer face au client. La boucle est
+simple ; savoir si elle a REELLEMENT joue ne l'est pas.
+
+Un plan reduit a « fin de tour » s'execute **sans erreur** et marque le tour comme joue.
+« 30 tours joues » se lisait donc exactement comme un combat mene au corps a corps, alors
+que le bot n'avait lance aucun sort -- et la cause la plus frequente n'est pas tactique :
+un `slot` errone retire le sort en silence. `FightReport` compte donc les tours muets a
+part, remonte les sorts sans raccourci, et affiche une PROPORTION : un tour muet isole est
+normal, la moitie est un avertissement, la totalite nomme la barre de sorts.
+Verifie par mutation -- retirer le compte tue trois tests.
+
+Une frame illisible ne termine pas le combat : une frame de transition l'est sans que le
+combat soit fini, et la declarer terminee renvoyait le bot sur son circuit en pleine
+bagarre. Trois lectures vides d'affilee valent une fin, une seule vaut un hoquet. Zero
+tour joue est rapporte comme une panne de perception (`BLIND`) et non comme une victoire
+rapide.
+
+`quest/handlers.py` branche le directeur sur `Walker` et `Engager`. Deux refus y sont
+gardes par des tests, parce que tous deux feraient progresser une quete sur une panne :
+un deplacement reussi n'avance aucun objectif, et **un combat entierement muet n'est pas
+un combat gagne**, quoi qu'en dise la timeline.
+
+Le comptage des morts est volontairement SOUS-ESTIME (un par combat) : rien ne sait
+combien d'ennemis un groupe contenait ni lesquels sont morts, les PV ennemis n'etant
+jamais lisibles. Sous-estimer refait un combat de trop ; surestimer envoie rendre une
+quete qui ne l'est pas.
 
 #### Ce qu'il faut pour debloquer la suite
 

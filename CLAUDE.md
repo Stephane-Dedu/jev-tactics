@@ -112,5 +112,11 @@ justifiait**. Une borne survivant a son motif a deja fait tomber tout le pipelin
 - **`configs/spells/example.json` est fictif et ne compte que 3 sorts.** Toute mesure de
   diversite ou de saturation faite dessus est trompeuse : `sacrieur.json` en porte 20, et
   c'est la que les plans candidats se revelent redondants.
+- **Un extra optionnel importe en tete de fichier redevient obligatoire.** C'est arrive :
+  `perception/ui.py` importait `pytesseract`, `perception/__init__` importe `ui`, donc
+  tout le paquet exigeait l'extra `ocr`. Une installation suivant le README echouait a la
+  COLLECTE -- 31 fichiers, aucun test execute -- et rien ne le montrait en local, ou le
+  venv l'avait par habitude. `tests/test_optional_deps.py` le garde desormais, extra par
+  extra. Tout extra s'importe **dans la fonction qui s'en sert**.
 - **Un `slot` errone retire un sort en silence** ; il ne leve rien. C'est le defaut le
   plus difficile a diagnostiquer du projet.

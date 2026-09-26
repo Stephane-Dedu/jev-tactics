@@ -16,17 +16,51 @@ import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import cv2
 import numpy as np
-import pytesseract
 from numpy.typing import NDArray
 from pydantic import BaseModel
 
-# Localisation de l'executable Tesseract (Windows par defaut ; surchargeable par env).
-_TESS = os.environ.get("TESSERACT_CMD", r"C:\Program Files\Tesseract-OCR\tesseract.exe")
-if Path(_TESS).exists():
-    pytesseract.pytesseract.tesseract_cmd = _TESS
+# TESSERACT EST CHARGE A L'APPEL, PAS AU CHARGEMENT DU MODULE.
+#
+# Il ne sert plus sur le chemin chaud -- un classifieur maison lit l'ATH en 1,3 ms -- et
+# `pyproject.toml` le declare en extra optionnel (`ocr`). L'import etait pourtant en tete
+# de fichier : `perception/__init__` importe `ui`, donc TOUT le paquet exigeait une
+# dependance annoncee comme facultative. Le depot s'installait selon son propre README
+# (`pip install -e ".[dev]"`) et la suite entiere tombait en erreur de COLLECTE -- 31
+# fichiers, pas un seul test execute.
+#
+# Invisible en local, ou le venv l'avait par habitude. Trouve par la premiere CI, qui
+# n'installe que ce que le README annonce : c'est precisement ce qu'on lui demande.
+_TESSERACT: Any = None
+
+
+def _tesseract() -> Any:
+    """L'oracle hors-ligne, charge au premier besoin.
+
+    Leve un message actionnable plutot qu'un `ImportError` nu : on n'arrive ici que si le
+    classifieur maison a rendu la main -- cas deja rare -- et il faut savoir que c'est un
+    extra qui manque, non le paquet qui est casse.
+    """
+    global _TESSERACT
+    if _TESSERACT is None:
+        try:
+            import pytesseract
+        except ImportError as exc:
+            raise RuntimeError(
+                'pytesseract absent : c\'est le repli OCR, installe par '
+                '`pip install -e ".[ocr]"` (plus le binaire Tesseract). Le chemin normal '
+                "est le classifieur maison ; si l'on arrive ici, ses gabarits n'ont pas "
+                "pu etre charges."
+            ) from exc
+        cmd = os.environ.get(
+            "TESSERACT_CMD", r"C:\Program Files\Tesseract-OCR\tesseract.exe")
+        if Path(cmd).exists():
+            pytesseract.pytesseract.tesseract_cmd = cmd
+        _TESSERACT = pytesseract
+    return _TESSERACT
 
 
 @dataclass(frozen=True)
@@ -221,7 +255,7 @@ def _ocr(binary: NDArray[np.uint8]) -> str:
     # vide. Le fallback etait donc muet exactement la ou le classifieur l'appelait.
     for psm in (7, 8, 10, 13):  # ligne, mot, caractere unique, ligne brute
         cfg = f"--psm {psm} -c tessedit_char_whitelist=0123456789"
-        txt = pytesseract.image_to_string(binary, config=cfg)
+        txt = _tesseract().image_to_string(binary, config=cfg)
         if any(c.isdigit() for c in txt):
             return txt.strip()
     return ""

@@ -26,6 +26,7 @@ fois le temps de decision ; une renotation coute un appel a `evaluate` par plan.
 
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass
 
 from jev_tactics.calibration.grid import BoardMap
@@ -35,10 +36,17 @@ from jev_tactics.planner.search import DEFAULT_MAX_NODES
 from jev_tactics.rules.spells import Spell
 from jev_tactics.state import CombatState
 
-# Taille du vivier explore avant renotation. Large : un plan que l'heuristique par defaut
-# classe centieme peut etre le MEILLEUR sous « se mettre a l'abri ». Tronquer le vivier a
-# huit avant de renoter reintroduirait le biais qu'on cherche a retirer.
-POOL = 400
+# Taille du vivier renote. Le vivier est classe par la ponderation PAR DEFAUT ; le
+# tronquer revient donc a laisser l'heuristique decider quels plans les autres postures
+# ont le droit de considerer -- exactement le biais qu'on cherche a retirer. Un plan que
+# le defaut classe six-centieme peut etre le meilleur sous « se mettre a l'abri ».
+#
+# MESURE : 612 plans distincts sur un tour de `sacrieur.json` en regime contraint, contre
+# une borne fixee a 400. Le vivier etait donc bel et bien coupe, et rien ne le disait.
+# La borne existe encore pour empecher un cas pathologique de faire exploser la
+# renotation, mais elle est posee tres au-dessus de ce qui a ete observe -- et
+# `posture_plans` previent quand elle mord.
+POOL = 5000
 
 
 @dataclass(frozen=True)
@@ -128,6 +136,14 @@ def posture_plans(
     pool = top_sequences(board, state, spells, k=POOL, max_nodes=max_nodes)
     if not pool:
         return []
+    if len(pool) >= POOL:
+        # Le vivier a ete coupe : les postures choisissent parmi un sous-ensemble filtre
+        # par l'heuristique par defaut. Ce n'est pas fatal, mais c'est un biais silencieux
+        # -- et un biais silencieux sur le choix est precisement ce que ce module corrige.
+        warnings.warn(
+            f"vivier tronque a {POOL} plans : les postures ne voient qu'un sous-ensemble "
+            "classe par la ponderation par defaut. Relever POOL.",
+            RuntimeWarning, stacklevel=2)
 
     chosen: list[tuple[Posture, Candidate]] = []
     seen: set[tuple[object, ...]] = set()

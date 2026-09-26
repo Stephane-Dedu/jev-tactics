@@ -54,6 +54,22 @@ from jev_tactics.state import CombatState, Team
 # rigoureusement identiques. La valeur retenue est donc juste pour une raison plus etroite
 # qu'il n'y paraissait -- au-dela, la mise a mort ecrase la prudence, et un bot qui
 # s'acharne sur un mourant se fait entourer par les deux autres.
+#
+# /!\ CE TERME EST INERTE DANS LE JEU, ET TOUTES LES MESURES CI-DESSUS SONT D'ARENE.
+#
+# La prime vit dans la branche `hp_known` de `evaluate` ; l'autre branche la saute par un
+# `continue`. Or sur 32 captures reelles, 72 ennemis detectes et ZERO avec des PV lisibles
+# -- ni l'OCR, reserve au joueur, ni la timeline, qui ne donne qu'un ratio sans maximum.
+# La branche riche n'est donc JAMAIS prise en session.
+#
+# Mesure directe : a PV inconnus, faire passer ce poids de 0 a 600 laisse le score
+# rigoureusement identique. Le terme le plus documente du fichier ne decide rien de ce que
+# le bot joue, et c'est ce qui explique qu'une ponderation qui annule tout sauf les degats
+# le batte de neuf points dans ce regime.
+#
+# Ne pas le regler davantage avant que les PV ennemis soient lus : ce serait affiner un
+# terme mort. `tests/test_weights_regime.py` garde ce constat et echouera le jour ou la
+# lecture arrivera -- jour ou TOUS les poids seront a remesurer.
 KILL_BONUS = 60.0
 # Valeur d'une case de distance vis-a-vis d'un ennemi vivant.
 #

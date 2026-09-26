@@ -52,6 +52,22 @@ Les 220 tests sautes demandent des **captures non versionnees**. Sur un clone ne
 suite couvre donc un quart de moins que sur la machine d'origine. Commiter un corpus cure
 est au plan (`docs/PLAN.md`, P4) ; d'ici la, ne pas lire « vert » comme « couvert ».
 
+## Le faire jouer
+
+```bash
+python scripts/play.py --goto 7,3                 # DRY-RUN : rien ne bouge
+python scripts/play.py --goto 7,3 --execute       # pilote vraiment
+python scripts/play.py --fight --keys Ravage=1,Hostilite=2 --execute
+```
+
+**Dry-run par defaut.** Le script clique et appuie sur des touches dans une fenetre de
+jeu ; le defaut inverse transformerait une faute de frappe en session pilotee. Il attend
+que le jeu soit au premier plan avant de capturer, et refuse de piloter si le moniteur
+capture ne commence pas a (0, 0) -- sinon chaque clic partirait decale d'une constante,
+souvent sur l'autre ecran, avec une detection parfaite et zero combat.
+
+Les quetes n'y sont pas : le directeur sait quoi faire, il lui manque des yeux.
+
 ## Mesure
 
 Le chiffre a battre depend du **regime**, et c'est la nuance la plus facile a rater :

@@ -118,9 +118,20 @@ KILL_BONUS = 60.0
 #
 # ET POURTANT LE DEFAUT N'EST PAS CHANGE. La meme mesure sur `example.json` (3 sorts)
 # inverse le resultat : 64,5 % a 2,5 contre 53,5 % a 1,0, soit ONZE POINTS DANS L'AUTRE
-# SENS. La valeur optimale ne depend pas que du regime de PV, elle depend de la PUISSANCE
-# DU KIT -- avec peu de degats on ne peut rien faire tomber, donc survivre paie ; avec
-# vingt sorts on tue vite, donc l'agressivite paie.
+# SENS. Balayage complet des deux kits, regime courant, 150 combats :
+#
+#     safety            0,0    0,5    1,0    1,5    2,5    4,0
+#     example (3 sorts) 40,7%  53,3%  53,3%  55,3%  65,3%  60,0%    <- optimum a 2,5
+#     sacrieur (20)     88,7%  90,0%  90,0%  89,3%  84,0%  72,7%    <- optimum a 0,5-1,0
+#
+# LA CAUSE N'EST PAS ETABLIE, et il faut le dire plutot que d'inventer. L'explication
+# tentante -- « vingt sorts tuent vite, donc l'agressivite paie » -- est REFUTEE par la
+# mesure : `sacrieur` a des degats moyens PLUS FAIBLES (13 contre 21). Ce n'est donc pas
+# la puissance brute. L'hypothese restante, non verifiee, est la COUVERTURE : vingt sorts
+# offrent plus de portees et de zones, donc il y a presque toujours un bon coup a jouer
+# et reculer coute une occasion ; avec trois sorts, souvent rien n'est a portee et le
+# placement reprend ses droits. A verifier en faisant varier le nombre de sorts a degats
+# constants -- ce qui n'a pas ete fait.
 #
 # Il n'existe donc pas de bonne constante, et en choisir une revient a regler le bot pour
 # un personnage. C'est un argument POUR le choix par tour : `planner/postures.py` propose

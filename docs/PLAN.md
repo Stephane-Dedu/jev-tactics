@@ -194,10 +194,23 @@ optimum, la prudence n'est pas inutile.
 La meme mesure sur `example.json` (3 sorts) **inverse le classement** : 64,5 % a 2,5
 contre 53,5 % a 1,0, soit onze points dans l'autre sens.
 
-La valeur optimale ne depend pas que du regime de PV : elle depend de la **puissance du
-kit**. Peu de degats, on ne fait rien tomber et survivre paie ; vingt sorts, on tue vite
-et l'agressivite paie. Il n'existe donc pas de bonne constante -- en figer une revient a
-regler le bot pour un personnage.
+Balayage complet des deux kits, regime courant, 150 combats :
+
+| safety | 0,0 | 0,5 | 1,0 | 1,5 | 2,5 | 4,0 |
+|---|---|---|---|---|---|---|
+| `example` (3 sorts) | 40,7 % | 53,3 % | 53,3 % | 55,3 % | **65,3 %** | 60,0 % |
+| `sacrieur` (20 sorts) | 88,7 % | **90,0 %** | **90,0 %** | 89,3 % | 84,0 % | 72,7 % |
+
+**La cause n'est pas etablie.** L'explication tentante -- « vingt sorts tuent vite, donc
+l'agressivite paie » -- est *refutee par la mesure* : `sacrieur` a des degats moyens plus
+faibles (13 contre 21). L'hypothese restante, non verifiee, est la COUVERTURE : vingt
+sorts offrent plus de portees et de zones, donc il y a presque toujours un bon coup a
+jouer et reculer coute une occasion ; avec trois sorts, souvent rien n'est a portee et le
+placement reprend ses droits. A verifier en faisant varier le nombre de sorts a degats
+constants.
+
+Quoi qu'il en soit, il n'existe pas de bonne constante -- en figer une revient a regler le
+bot pour un personnage.
 
 **C'est un argument pour le choix PAR TOUR.** `postures.py` propose deja `degats` et
 `abri` cote a cote ; le balayage valide cette mecanique au lieu de designer un nouveau

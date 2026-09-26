@@ -290,6 +290,7 @@ amont visent a MASQUER le panneau comme source de bruit visuel.
 | Modele : quete, etapes, avancement (`quest/model.py`) | **ecrit, teste** |
 | Directeur : quelle action ensuite (`quest/director.py`) | **ecrit, 25 tests** |
 | Deroule bout en bout (`plan_ahead`) | **ecrit, teste** |
+| Executeur : jouer la quete, gerer les pannes (`quest/runner.py`) | **ecrit, 11 tests** |
 | Lecture du journal de quetes | ⬜ **bloque : aucune capture** |
 | Detection des PNJ sur la carte | ⬜ **bloque : aucune capture** |
 | Fenetre de dialogue, choix de replique | ⬜ **bloque : aucune capture** |
@@ -324,6 +325,23 @@ Un defaut d'API corrige au passage : `Act.DONE` signifiait a la fois « cette et
 satisfaite, continuer » et « la quete est finie, s'arreter ». Un appelant ecrivant
 `if intent.act is Act.DONE: stop()` arretait la quete au milieu, sur un simple
 deplacement accompli. Scinde en `STEP_DONE` / `DONE`.
+
+#### L'executeur, et le PIETINEMENT
+
+`quest/runner.py` joue les intentions. La partie difficile n'est pas d'enchainer des
+succes -- un bot ne passe pas sa vie a reussir -- mais de reconnaitre **une intention qui
+reussit sans rien faire avancer** : on se rend sur la bonne carte, on y tue le mauvais
+monstre. Rien n'« echoue », donc un compteur d'echecs laisse la boucle tourner en la
+declarant saine. C'est la meme forme que « 30 tours joues » pour un combat ou le bot
+n'avait lance aucun sort. Le compteur porte donc sur l'AVANCEMENT, pas sur le succes.
+
+Un defaut trouve par un test, pas par relecture : `skip()` fait avancer l'index
+d'OBJECTIF, ce qui ne veut rien dire tant que la quete n'est pas acceptee. Un deplacement
+impossible vers le donneur faisait sauter des objectifs qu'on n'avait pas le droit de
+commencer, et le directeur redemandait le meme trajet a chaque tour. La reponse depend
+desormais de la PHASE : avant l'acceptation et au rendu rien n'est sautable -- la quete
+est abandonnee en le disant -- et seuls les objectifs peuvent etre passes.
+Verifie par mutation.
 
 #### Ce qu'il faut pour debloquer la suite
 

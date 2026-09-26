@@ -133,12 +133,73 @@ d'origine est conserve.
 
 ---
 
-## Hors perimetre
+## Objectif — un bot qui joue
 
-`farming`, `market`, la navigation, l'orchestrateur : ils restent dans le depot d'origine.
-La boucle reactive (clics, UI) n'ira pas vers Jev de toute facon -- 120 req/min ne couvrent
-pas une decision par image. Seuls le **tactique** (le plan du tour) et le **strategique**
-(engager, fuir, changer de cible) sont candidats.
+Le perimetre « combat seul » est leve. La cible est un bot qui **joue**, dans cet ordre
+d'importance :
+
+1. **se deplacer sur la carte**
+2. **engager un combat**
+3. **gagner le combat avec les bons sorts**
+4. puis, une fois les trois acquis : **bout en bout** — prendre une quete, la faire, la
+   rendre au bon PNJ.
+
+### G1 — Se deplacer  *(en cours)*
+
+| Brique | Etat |
+|---|---|
+| Graphe de cartes, trajets, circuits (`world/navigation.py`) | **porte, 93 tests verts** |
+| Ou cliquer pour sortir (`world/travel.edge_point`) | **extrait, teste** |
+| Juger le deplacement (`world/travel.judge_move`) | **extrait, teste** |
+| Lecture des coordonnees (`perception/coordinates`) | deja la |
+| Boucle : cliquer, attendre, confirmer, rembobiner | **a ecrire** |
+
+`navigation.py` vivait sous `farming/` sans rien en importer : le ranger la rendait le
+deplacement inaccessible a tout ce qui n'etait pas de la recolte. Il est maintenant sous
+`world/`.
+
+L'extraction de `travel` separe ce qui etait mele dans `farming/runner.py` : **decider ou
+cliquer** et **juger ce qui s'est passe** d'un cote, la comptabilite de la recolte de
+l'autre. `judge_move` rend trois issues — arrive / derive / immobile — et non un booleen,
+parce que la **derive** est le mode de panne qui ne se voit pas : cliquer un bord fait
+marcher le personnage, un obstacle le fait sortir ailleurs, la comparaison d'images dit
+« reussi », et le circuit repart d'une carte decalee qu'il ne rattrapera jamais.
+
+Reste : la boucle qui enchaine clic -> attente -> confirmation -> rembobinage, sans la
+session de recolte. Puis un `Walker` qui suit un trajet du graphe jusqu'a une carte cible.
+
+### G2 — Engager un combat
+
+`perception/monsters.py` (72 ko) et `perception/entities.py` sont deja portes. Manque la
+logique d'engagement, aujourd'hui dans `farming/runner.py` et `bot/orchestrator.py` :
+reperer un groupe, juger s'il est engageable, cliquer, confirmer l'entree en combat.
+
+A extraire de la meme facon que `travel` — la decision d'engager est un bon candidat pour
+une question `noul` a Jev (« ce groupe vaut-il d'etre engage ? »), une fois la perception
+branchee.
+
+### G3 — Gagner le combat  *(bloque par D1)*
+
+C'est P1 ci-dessus : les plans candidats ne sont pas distincts, donc Jev n'a rien a
+trancher. Rien d'autre ne bloque — la boucle percevoir -> decider -> agir tourne.
+
+### G4 — Quetes et PNJ  *(rien n'existe)*
+
+**Aucune brique n'existe, dans aucun des deux depots.** Les seules mentions de « quetes »
+en amont concernent le panneau de quetes comme **source de bruit visuel a masquer** — soit
+exactement l'inverse de le lire.
+
+A construire de zero :
+
+- lecture du journal de quetes (OCR sur panneau, objectifs, etat) ;
+- detection des PNJ sur la carte — distincte de celle des monstres, qui suppose un groupe
+  engageable ;
+- fenetre de dialogue : la reconnaitre, lire les repliques, choisir la bonne option ;
+- machine a etats de quete : objectif courant, carte cible, condition d'achevement.
+
+C'est le plus gros poste du projet et le moins entame. Ne pas le commencer avant que
+G1–G3 tiennent : une quete est une SEQUENCE de deplacements, de combats et de dialogues,
+et elle ne peut pas etre plus fiable que ses termes.
 
 ## Ce que Jev ne peut pas faire
 

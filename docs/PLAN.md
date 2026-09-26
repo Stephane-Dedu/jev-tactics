@@ -116,21 +116,42 @@ et elle est coherente avec ce que l'arene documente deja : **tous les poids ont 
 a PV ennemis CONNUS**, regime que le bot ne rencontre jamais. A mesurer plus largement
 avant d'y toucher.
 
-## P2 — Le banc de comparaison
+## P2 — Le banc de comparaison  *(fait)*
 
-Un script qui fait jouer plusieurs decideurs **sur les memes graines**, dans **les deux
-regimes**, et imprime l'ecart.
+`scripts/compare_deciders.py` : plusieurs politiques, les MEMES graines, et **les deux
+regimes de PV cote a cote**.
 
 ```bash
-python scripts/compare_deciders.py --fights 200 --spells configs/spells/sacrieur.json
+python scripts/compare_deciders.py --fights 60 --spells configs/spells/sacrieur.json     --regime contraint --postures
 ```
 
-Sortie attendue : par decideur, taux de victoire a PV connus **et** inconnus, tours
-medians, PV restants, profil des defaites, part de replis, et **part des tours ou le
-decideur s'ecarte du rang 0** -- un decideur qui suit toujours l'heuristique ne justifie
-pas son appel.
+### Le regime inverse le classement
 
-Reference a battre : **60 %**, `enemy_hp_known=False`.
+40 combats, `sacrieur.json`, regime contraint :
+
+| politique | PV connus (l'arene) | PV inconnus (le jeu) | ecart |
+|---|---|---|---|
+| toujours `reference` | **62,5 %** | 37,5 % | **−25,0** |
+| toujours `position` | 62,5 % | 37,5 % | −25,0 |
+| toujours `achever` | 60,0 % | 37,5 % | −22,5 |
+| solveur seul | 55,0 % | 30,0 % | −25,0 |
+| toujours `degats` | 45,0 % | **42,5 %** | **−2,5** |
+| toujours `abri` | 0,0 % | 22,5 % | +22,5 |
+
+A 40 combats l'intervalle vaut ±15 points : aucun ecart ENTRE politiques n'est concluant.
+Ce qui l'est davantage, c'est la comparaison D'UNE politique a elle-meme d'un regime a
+l'autre -- meme code, memes graines, une seule variable.
+
+Et la, le resultat est net : **la ponderation reglee a la main perd 25 points en passant
+au regime reel, la ponderation naive en perd 2,5.** `reference` est la meilleure dans
+l'arene et mediocre dans le jeu ; `degats` est la pire dans l'arene et la meilleure dans
+le jeu.
+
+C'est la confirmation la plus directe de ce que l'arene documentait deja sans en tirer la
+consequence : les poids de `scoring.py` sont optimaux pour un regime que le bot ne
+rencontre jamais. Les retuner a PV inconnus est desormais un chantier identifie -- mais il
+demande plus de combats que 40, l'intervalle actuel etant trop large pour regler quoi que
+ce soit.
 
 ## P3 — Cassettes et premier appel reel
 

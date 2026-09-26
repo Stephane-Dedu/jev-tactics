@@ -280,23 +280,64 @@ Jev (« ce groupe vaut-il d'etre engage ? »), avec `monsters.best_group` comme 
 C'est P1 ci-dessus : les plans candidats ne sont pas distincts, donc Jev n'a rien a
 trancher. Rien d'autre ne bloque — la boucle percevoir -> decider -> agir tourne.
 
-### G4 — Quetes et PNJ  *(rien n'existe)*
+### G4 — Quetes et PNJ  *(logique faite ; perception bloquee sur des captures)*
 
-**Aucune brique n'existe, dans aucun des deux depots.** Les seules mentions de « quetes »
-en amont concernent le panneau de quetes comme **source de bruit visuel a masquer** — soit
-exactement l'inverse de le lire.
+**Rien n'existait**, dans aucun des deux depots. Les seules mentions de « quetes » en
+amont visent a MASQUER le panneau comme source de bruit visuel.
 
-A construire de zero :
+| Brique | Etat |
+|---|---|
+| Modele : quete, etapes, avancement (`quest/model.py`) | **ecrit, teste** |
+| Directeur : quelle action ensuite (`quest/director.py`) | **ecrit, 25 tests** |
+| Deroule bout en bout (`plan_ahead`) | **ecrit, teste** |
+| Lecture du journal de quetes | ⬜ **bloque : aucune capture** |
+| Detection des PNJ sur la carte | ⬜ **bloque : aucune capture** |
+| Fenetre de dialogue, choix de replique | ⬜ **bloque : aucune capture** |
 
-- lecture du journal de quetes (OCR sur panneau, objectifs, etat) ;
-- detection des PNJ sur la carte — distincte de celle des monstres, qui suppose un groupe
-  engageable ;
-- fenetre de dialogue : la reconnaitre, lire les repliques, choisir la bonne option ;
-- machine a etats de quete : objectif courant, carte cible, condition d'achevement.
+`director.next_intent` est une fonction PURE : une quete entiere se joue en quelques
+millisecondes, sans le jeu, et une erreur d'ordre se voit dans un test au lieu de se
+decouvrir apres quarante minutes de session. C'est aussi la couche qui relie enfin les
+trois briques faites -- une quete n'est qu'une SEQUENCE de deplacements, de combats et de
+dialogues.
 
-C'est le plus gros poste du projet et le moins entame. Ne pas le commencer avant que
-G1–G3 tiennent : une quete est une SEQUENCE de deplacements, de combats et de dialogues,
-et elle ne peut pas etre plus fiable que ses termes.
+Deroule obtenu sur une quete a trois etapes, depart (0,0) :
+
+```
+ 1. travel en (5, 5)
+ 2. talk Aventurier en (5, 5)  [non executable : perception manquante]
+ 3. travel en (6, 4)
+ 4. step_done en (6, 4)
+ 5. travel en (7, 3)
+ 6. fight Bouftou x3 en (7, 3)
+ 7. harvest Ble x5 en (7, 3)
+ 8. travel en (2, 8)
+ 9. talk Ancien en (2, 8)  [non executable : perception manquante]
+10. done
+```
+
+**Le manque est declare dans le CODE, pas ici.** `Intent.implemented` vaut faux pour tout
+ce qui demande la perception des PNJ, et `test_the_executable_set_matches_the_layers_that_exist`
+echouera le jour ou cette perception arrivera sans que le directeur soit mis a jour --
+exactement le moment ou il faut y penser.
+
+Un defaut d'API corrige au passage : `Act.DONE` signifiait a la fois « cette etape est
+satisfaite, continuer » et « la quete est finie, s'arreter ». Un appelant ecrivant
+`if intent.act is Act.DONE: stop()` arretait la quete au milieu, sur un simple
+deplacement accompli. Scinde en `STEP_DONE` / `DONE`.
+
+#### Ce qu'il faut pour debloquer la suite
+
+Des captures 1920x1080 du client, hors combat :
+
+1. **le journal de quetes ouvert**, avec au moins une quete en cours et ses objectifs ;
+2. **une carte portant un PNJ**, et la meme carte sans lui si possible -- c'est l'ecart
+   qui apprend le detecteur ;
+3. **une fenetre de dialogue ouverte**, avec plusieurs repliques proposees ;
+4. la meme fenetre a une autre etape, pour voir ce qui bouge.
+
+Sans elles, la perception des PNJ ne peut pas etre ecrite -- ni, surtout, verifiee. Le
+depot a douze defauts trouves par confrontation a de vraies captures, chacun invisible en
+test : en inventer serait en fabriquer un treizieme.
 
 ## Ce que Jev ne peut pas faire
 

@@ -15,6 +15,8 @@ Le score combine, par ordre d'importance :
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from jev_tactics.calibration.grid import BoardMap
 from jev_tactics.planner.legal import TurnState
 from jev_tactics.rules.movement import grid_distance
@@ -197,7 +199,34 @@ SURVIVAL_WEIGHT = 3.0
 WOUNDED_WEIGHT = 10.0
 
 
-def danger_factor(state: CombatState) -> float:
+@dataclass(frozen=True)
+class Weights:
+    """La ponderation de `evaluate`, extraite en VALEUR.
+
+    Les defauts reproduisent exactement les constantes du module : `evaluate()` sans
+    `weights` se comporte comme avant, au bit pres. C'est la condition pour que la
+    reference mesuree -- 60 % de victoires a PV ennemis inconnus -- reste comparable
+    pendant qu'on ajoute des POSTURES par-dessus.
+
+    Ces poids ne sont pas des reglages interchangeables : chacun encode un jugement
+    tactique, et `planner/postures.py` s'en sert pour demander au solveur « le meilleur
+    plan SI l'on veut achever », « si l'on veut survivre ». Le solveur ne change pas ;
+    l'objectif qu'on lui donne change.
+    """
+
+    kill_bonus: float = KILL_BONUS
+    safety: float = SAFETY_WEIGHT
+    friendly_fire: float = FRIENDLY_FIRE_PENALTY
+    wasted_ap: float = WASTED_AP_PENALTY
+    wasted_mp: float = WASTED_MP_PENALTY
+    survival: float = SURVIVAL_WEIGHT
+    wounded: float = WOUNDED_WEIGHT
+
+
+DEFAULT_WEIGHTS = Weights()
+
+
+def danger_factor(state: CombatState, weights: Weights = DEFAULT_WEIGHTS) -> float:
     """Multiplicateur de prudence, de 1 (intact) a 1 + SURVIVAL_WEIGHT (a l'agonie).
 
     PV inconnus : facteur neutre. Supposer le pire rendrait le bot craintif sur une
@@ -207,7 +236,7 @@ def danger_factor(state: CombatState) -> float:
     me = state.find_self()
     if me is None or not me.hp_max:
         return 1.0
-    return 1.0 + SURVIVAL_WEIGHT * (1.0 - me.hp / me.hp_max)
+    return 1.0 + weights.survival * (1.0 - me.hp / me.hp_max)
 
 
 def expected_damage(spell_damage: float, remaining_hp: int) -> float:
@@ -221,6 +250,8 @@ def evaluate(
     turn: TurnState,
     damage: dict[str, float],
     spells: list | None = None,
+    *,
+    weights: Weights = DEFAULT_WEIGHTS,
 ) -> float:
     """Score d'un tour termine dans l'etat `turn`, ayant inflige `damage` par entite.
 
@@ -228,7 +259,7 @@ def evaluate(
     RETIRE, cf. §6.1.g du doc d'archi. Le parametre reste pour ne pas casser les appels.
     """
     score = 0.0
-    prudence = SAFETY_WEIGHT * danger_factor(state)
+    prudence = weights.safety * danger_factor(state, weights)
 
     for entity in state.entities:
         if entity.team is not Team.ENEMY:
@@ -249,7 +280,7 @@ def evaluate(
             # empeche de le regler. Modeliser des allies dans l'arene est le prealable.
             subi = damage.get(entity.entity_id, 0.0)
             if subi and entity.hp_max:
-                score -= FRIENDLY_FIRE_PENALTY * min(subi, entity.hp) / entity.hp_max
+                score -= weights.friendly_fire * min(subi, entity.hp) / entity.hp_max
             continue
         raw = damage.get(entity.entity_id, 0.0)
 
@@ -262,18 +293,18 @@ def evaluate(
             # Prime d'achevement sans PV absolus : plus la cible est entamee, plus la
             # frapper vaut. Nulle tant que les PV sont un remplissage (cf. WOUNDED_WEIGHT).
             if entity.hp_max:
-                score += WOUNDED_WEIGHT * (1.0 - entity.hp / entity.hp_max) * raw
+                score += weights.wounded * (1.0 - entity.hp / entity.hp_max) * raw
             score += prudence * grid_distance(board, turn.cell, entity.cell)
             continue
 
         dealt = expected_damage(raw, entity.hp)
         score += dealt
         if dealt >= entity.hp:
-            score += KILL_BONUS
+            score += weights.kill_bonus
         else:
             # Seuls les survivants representent une menace au tour suivant.
             score += prudence * grid_distance(board, turn.cell, entity.cell)
 
-    score -= WASTED_AP_PENALTY * turn.ap
-    score -= WASTED_MP_PENALTY * turn.mp
+    score -= weights.wasted_ap * turn.ap
+    score -= weights.wasted_mp * turn.mp
     return score

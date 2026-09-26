@@ -59,6 +59,10 @@ class Candidate:
 
     plan: Plan
     damage: dict[str, float]
+    # L'ETAT DE FIN DE TOUR, garde pour pouvoir renoter le plan sans relancer la
+    # recherche. C'est ce qui rend les postures abordables : une seule exploration, puis
+    # une reevaluation par objectif -- au lieu de cinq parcours complets.
+    turn: TurnState | None = None
 
     @property
     def total_damage(self) -> float:
@@ -106,10 +110,12 @@ def top_sequences(
     origins = movement_options(board, state, TurnState.from_combat(state))
     shot_table = build_shot_table(board, state, spells, list(origins))
 
-    def keep(path: list[Action], score: float, damage: dict[str, float]) -> None:
+    def keep(path: list[Action], score: float, damage: dict[str, float],
+             turn_state: TurnState) -> None:
         cand = Candidate(
             plan=Plan(actions=list(path), score=score, nodes=nodes, truncated=truncated),
             damage=dict(damage),
+            turn=turn_state,
         )
         sig = cand.signature()
         # A signature egale on garde le mieux note : c'est le meme plan, joue mieux.
@@ -120,7 +126,7 @@ def top_sequences(
     def visit(turn: TurnState, damage: dict[str, float], path: list[Action]) -> None:
         nonlocal nodes, truncated
 
-        keep(path, evaluate(board, state, turn, damage, spells), damage)
+        keep(path, evaluate(board, state, turn, damage, spells), damage, turn)
 
         if nodes >= max_nodes:
             truncated = True
@@ -179,6 +185,7 @@ def top_sequences(
                 plan=Plan(actions=[approach], score=ranked[0].plan.score,
                           nodes=nodes, truncated=truncated),
                 damage={},
+                turn=apply_action(TurnState.from_combat(state), approach),
             ))
             ranked = ranked[:k]
     # La troncature n'est connue qu'a la fin du parcours, alors que les Plan ont ete
@@ -191,6 +198,7 @@ def top_sequences(
                 plan=Plan(actions=c.plan.actions, score=c.plan.score,
                           nodes=nodes, truncated=True),
                 damage=c.damage,
+                turn=c.turn,
             )
             for c in ranked
         ]

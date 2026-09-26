@@ -147,11 +147,14 @@ def _remaining(ap: int, casts: list[Cast]) -> int:
 
 
 def plan_id(index: int) -> str:
-    """Identifiant d'option stable et sans signification tactique.
+    """Identifiant positionnel, conserve pour la PROJECTION seule.
 
-    Volontairement opaque (`plan_0`, `plan_1`...) : un nom parlant -- « aggressif »,
-    « prudent » -- serait un indice glisse dans l'enonce, et l'on mesurerait la reaction
-    du modele a nos etiquettes plutot qu'aux plans eux-memes.
+    Les options soumises a Jev portent desormais des noms d'INTENTION (`achever`,
+    `abri`...), et ce n'est pas un indice glisse dans l'enonce : l'intention EST la
+    question. On ne demande plus « lequel de ces huit plans » -- question a laquelle huit
+    descriptions identiques ne permettaient pas de repondre -- mais « que veux-tu faire ».
+
+    Cet identifiant ne sert plus qu'a reperer les plans dans l'etat projete.
     """
     return f"plan_{index}"
 

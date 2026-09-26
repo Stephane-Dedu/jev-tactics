@@ -10,7 +10,7 @@ import numpy as np
 from jev_tactics.calibration.grid import BoardMap
 from jev_tactics.planner import scoring
 from jev_tactics.planner.legal import TurnState
-from jev_tactics.planner.scoring import evaluate
+from jev_tactics.planner.scoring import Weights, evaluate
 from jev_tactics.rules.movement import grid_distance
 from jev_tactics.state import CombatState, Entity, Team
 
@@ -58,22 +58,28 @@ class TestTheKillBonusIsOnAPlateau:
         eparpille = evaluate(board, state, turn, {"a": 10.0, "b": 10.0})
         assert acheve > eparpille
 
-    def test_the_preference_survives_at_the_measured_plateau_floor(self, monkeypatch):
-        """A 30 l'arene donne deja 77,8 % : la preference doit tenir la."""
-        monkeypatch.setattr(scoring, "KILL_BONUS", 30.0)
+    def test_the_preference_survives_at_the_measured_plateau_floor(self):
+        """A 30 l'arene donne deja 77,8 % : la preference doit tenir la.
+
+        La ponderation est passee EN PARAMETRE et non plus posee sur le module. Le
+        monkeypatch est devenu inoperant le jour ou `evaluate` a lu ses poids depuis un
+        `Weights` -- et ce test continuait de PASSER, en mesurant le defaut a 60 au lieu
+        de 30. Un test vert pour la mauvaise raison ne garde rien.
+        """
+        poids = Weights(kill_bonus=30.0)
         board, state = self._board_and_state()
         turn = self._turn(board, state)
-        assert (evaluate(board, state, turn, {"a": 20.0})
-                > evaluate(board, state, turn, {"a": 10.0, "b": 10.0}))
+        assert (evaluate(board, state, turn, {"a": 20.0}, weights=poids)
+                > evaluate(board, state, turn, {"a": 10.0, "b": 10.0}, weights=poids))
 
-    def test_without_the_bonus_the_preference_disappears(self, monkeypatch):
+    def test_without_the_bonus_the_preference_disappears(self):
         """A zero, l'arene tombe a 0,6 %. La cause se voit ici : plus rien ne distingue
         achever d'eparpiller, puisque les degats utiles sont les memes."""
-        monkeypatch.setattr(scoring, "KILL_BONUS", 0.0)
+        poids = Weights(kill_bonus=0.0)
         board, state = self._board_and_state()
         turn = self._turn(board, state)
-        assert (evaluate(board, state, turn, {"a": 20.0})
-                <= evaluate(board, state, turn, {"a": 10.0, "b": 10.0}))
+        assert (evaluate(board, state, turn, {"a": 20.0}, weights=poids)
+                <= evaluate(board, state, turn, {"a": 10.0, "b": 10.0}, weights=poids))
 
 
 class TestThePrudenceWeightsSitBelowACliff:
@@ -105,23 +111,23 @@ class TestThePrudenceWeightsSitBelowACliff:
         ])
         return board, state
 
-    def _frapper_vs_fuir(self, board, state):
+    def _frapper_vs_fuir(self, board, state, poids=None):
         proche = TurnState(cell=board.index_at(4, 3), ap=0, mp=0)
         loin = TurnState(cell=board.index_at(4, 8), ap=0, mp=0)
-        return (evaluate(board, state, proche, {"a": 20.0}),
-                evaluate(board, state, loin, {}))
+        kw = {} if poids is None else {"weights": poids}
+        return (evaluate(board, state, proche, {"a": 20.0}, **kw),
+                evaluate(board, state, loin, {}, **kw))
 
     def test_at_the_current_weight_striking_beats_fleeing(self):
         board, state = self._setup()
         frapper, fuir = self._frapper_vs_fuir(board, state)
         assert frapper > fuir
 
-    def test_at_the_cliff_fleeing_wins_and_that_is_the_zero_percent(self, monkeypatch):
+    def test_at_the_cliff_fleeing_wins_and_that_is_the_zero_percent(self):
         """La cause du 0 % mesure en arene : a 6,0, s'eloigner sans rien faire rapporte
         plus que s'approcher et frapper."""
-        monkeypatch.setattr(scoring, "SAFETY_WEIGHT", 6.0)
         board, state = self._setup()
-        frapper, fuir = self._frapper_vs_fuir(board, state)
+        frapper, fuir = self._frapper_vs_fuir(board, state, Weights(safety=6.0))
         assert fuir > frapper
 
     def test_the_survival_term_only_bites_when_hurt(self):

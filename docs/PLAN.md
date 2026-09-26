@@ -49,31 +49,72 @@ distingue dans l'enonce.
 
 ---
 
-## P1 — Des postures, pas des variantes  *(bloquant)*
+## P1 — Des postures, pas des variantes  *(fait)*
 
-Remplacer le top-K par **un plan par intention tactique**. Le solveur continue d'optimiser ;
-ce qu'on demande a Jev, c'est **sous quel objectif** optimiser.
+`planner/postures.py` : un plan par INTENTION, chacun etant l'optimum du solveur sous une
+ponderation differente de `evaluate`. `scoring.Weights` rend la ponderation parametrable ;
+son defaut reproduit l'ancien comportement au bit pres, donc la reference reste comparable.
 
-Postures visees, chacune produite par un `evaluate` pondere differemment :
+Postures : `reference` (l'heuristique, et le repli), `degats`, `achever`, `abri`,
+`position`.
 
-| Posture | Objectif |
+**Une seule exploration.** `Candidate` porte desormais son `TurnState` final, donc les
+plans sont RENOTES sous chaque ponderation au lieu d'etre recherches cinq fois. Cout
+mesure : **+10 %** sur le temps de decision (2919 ms contre 2652 ms pour `best_sequence`
+seul, a 20 sorts / 10 PA / plateau 9x9).
+
+### Le defaut est corrige, et mesure
+
+| | avant | apres |
+|---|---|---|
+| descriptions factuelles identiques | **16 / 24** | **0 / 99** |
+| plage de degats entre options | 93–93 | reelle |
+
+### Le critere « >= 3 postures » etait mal pose
+
+Je l'avais ecrit sans nommer le REGIME -- exactement l'erreur relevee plus haut a propos
+des « 79 % ». Le nombre d'intentions distinctes depend de la puissance du personnage :
+
+| regime | 1 option | 2 | 3 | 4 | mediane |
+|---|---|---|---|---|---|
+| 2 ennemis, 200 PV, 10 PA | 17/40 | 21 | 1 | 1 | 2 |
+| 4 ennemis, 300 PV, 10 PA | 10/40 | 20 | 9 | 1 | 2 |
+| **2 ennemis, 60 PV, 6 PA** | **0/40** | 12 | 22 | 6 | **3** |
+
+Un personnage surpuissant n'a pas de dilemme : le meilleur plan l'est sous toutes les
+intentions. Le dilemme apparait quand les ressources manquent -- c'est-a-dire quand la
+decision compte. Une seule option n'est donc pas un echec : `distinct_enough` fait sauter
+l'appel, et c'est l'information la plus honnete que la position puisse donner.
+
+### Le choix change le resultat
+
+120 combats, memes graines, PV ennemis inconnus, regime contraint (2 ennemis, 60 PV, 6 PA) :
+
+| politique | victoires |
 |---|---|
-| `degats_max` | maximiser les degats totaux |
-| `achever` | maximiser les mises a mort (ennemi passant a 0) |
-| `sur` | maximiser la distance finale au plus proche ennemi |
-| `position` | se placer pour le tour suivant, degats secondaires |
-| `econome` | conserver PA/PM, ne rien gaspiller |
+| toujours `degats` | **50,0 % ± 8,9** |
+| toujours `reference` | 40,8 % ± 8,8 |
+| regle « abri si PV < 35 % » | 25,8 % ± 7,8 |
+| toujours `abri` | 24,2 % ± 7,7 |
 
-Critere d'acceptation, mesurable :
+Trois enseignements, et deux changent la suite du travail :
 
-- sur 60 scenarios `sacrieur.json`, **au moins 3 postures distinctes** par tour en
-  mediane, ou l'appel est saute ;
-- deux postures ne se ressemblent jamais : `(cast-set, degats, distance finale)` differe ;
-- **`postures[0]` reste identique a `best_sequence`** sur 60/60 scenarios -- c'est la
-  garantie que le repli vaut toujours la reference.
+1. **Vingt-six points separent la meilleure intention de la pire.** Il y a donc bien
+   quelque chose a decider -- c'etait la question ouverte que P1 devait trancher.
+2. **La barre pour Jev est 50 %, pas 40,8 %.** Battre la reference ne suffit plus : il
+   faut battre « toujours frapper fort ».
+3. **Une regle simple echoue** (25,8 %, a peine mieux que fuir toujours). Choisir MAL est
+   pire que ne pas choisir. Ce n'est pas un argument pour Jev, c'est un avertissement :
+   un mauvais selecteur coute plus qu'il ne rapporte.
 
-Ne pas toucher a `scoring.py` ni a `search.py` : la regle ne change pas pendant qu'on
-change le joueur.
+### Ce que cela revele sur `scoring.py`
+
+`degats` -- qui neutralise prudence, prime de mise a mort et penalites -- bat de neuf
+points la ponderation reglee a la main. Les intervalles se chevauchent, donc ce n'est pas
+conclu ; mais la direction est la meme aux deux tailles d'echantillon testees (40 et 120),
+et elle est coherente avec ce que l'arene documente deja : **tous les poids ont ete regles
+a PV ennemis CONNUS**, regime que le bot ne rencontre jamais. A mesurer plus largement
+avant d'y toucher.
 
 ## P2 — Le banc de comparaison
 

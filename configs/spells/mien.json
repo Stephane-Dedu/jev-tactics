@@ -1,0 +1,28 @@
+[
+  {
+    "name": "cac_0",
+    "ap_cost": 3,
+    "slot": 0,
+    "range_min": 1,
+    "range_max": 1,
+    "needs_line_of_sight": true,
+    "max_casts_per_turn": 2,
+    "max_casts_per_target": 99,
+    "damage_min": 28,
+    "damage_max": 34,
+    "area_radius": 0
+  },
+  {
+    "name": "dps_courte_1",
+    "ap_cost": 3,
+    "slot": 1,
+    "range_min": 1,
+    "range_max": 3,
+    "needs_line_of_sight": true,
+    "max_casts_per_turn": 2,
+    "max_casts_per_target": 99,
+    "damage_min": 22,
+    "damage_max": 27,
+    "area_radius": 0
+  }
+]

@@ -1,0 +1,65 @@
+[project]
+name = "jev-tactics"
+version = "0.1.0"
+description = "Perception par vision et decision tactique confiee a Jev sur un combat au tour par tour"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+    "numpy>=1.26",
+    "opencv-python>=4.9",
+    "pydantic>=2.6",
+    "mss>=9.0",            # capture d'ecran
+    "pillow>=10.0",
+]
+
+[project.optional-dependencies]
+# Appels reels a Jev. Optionnel A DESSEIN : toute la suite de tests tourne sur
+# ReplayTransport, sans reseau ni cle API (cf. decision/transport.py).
+jev = ["typesafe-sdk>=0.1"]
+# Tesseract : oracle hors-ligne qui fabrique les templates de chiffres, et repli quand un
+# glyphe est rejete. Pas sur le chemin chaud.
+ocr = ["pytesseract>=0.3.10"]
+# Pilotage souris/clavier : requis uniquement par --execute.
+action = ["pydirectinput>=1.0"]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.3",
+    "mypy>=1.9",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"jev_tactics.perception" = ["data/*.npz"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+# La selection reste EXPLICITE. Sans `select`, ruff applique le jeu de regles par defaut
+# de la version installee : le meme code passait de 0 a 70 erreurs sur une simple mise a
+# jour d'outil. Un lint dont le resultat depend de la version installee ne peut pas
+# servir de garde-fou.
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "RUF"]
+ignore = [
+    # `int(round(x))` sur un scalaire numpy, a la FRONTIERE entre numpy et le systeme
+    # (clics, index de tableau). Le cast y normalise un type dont le depot ne controle
+    # pas la stabilite, pour un cout nul.
+    "RUF046",
+]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Aucun test ne doit sortir sur le reseau : le transport reel est un extra optionnel et
+# la CI ne l'installe pas. Ce marqueur sert aux rares tests qui exigent un affichage.
+markers = ["display: requiert un affichage (capture d'ecran, Tk)"]

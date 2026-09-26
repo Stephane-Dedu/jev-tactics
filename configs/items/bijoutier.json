@@ -1,0 +1,247 @@
+[
+ {
+  "id": 479,
+  "nom": "Ivoire",
+  "niveau": 80
+ },
+ {
+  "id": 749,
+  "nom": "Bakélélite",
+  "niveau": 80
+ },
+ {
+  "id": 838,
+  "nom": "Manuel du Directeur Grunob",
+  "niveau": 40
+ },
+ {
+  "id": 843,
+  "nom": "Coquille de Dragoeuf Charbon",
+  "niveau": 70
+ },
+ {
+  "id": 1614,
+  "nom": "Bombe de Graboule",
+  "niveau": 86
+ },
+ {
+  "id": 1660,
+  "nom": "Ambre d'Abraknyde Sombre",
+  "niveau": 78
+ },
+ {
+  "id": 1671,
+  "nom": "Avoine Magique",
+  "niveau": 86
+ },
+ {
+  "id": 1696,
+  "nom": "Étoffe de Choudini",
+  "niveau": 90
+ },
+ {
+  "id": 2486,
+  "nom": "Coque Endommagée",
+  "niveau": 56
+ },
+ {
+  "id": 2571,
+  "nom": "Patte de Tofukaz",
+  "niveau": 36
+ },
+ {
+  "id": 2621,
+  "nom": "Barbe du Chouque",
+  "niveau": 90
+ },
+ {
+  "id": 2645,
+  "nom": "Groin de Dragon Cochon",
+  "niveau": 100
+ },
+ {
+  "id": 2647,
+  "nom": "Oreille de Médibwork",
+  "niveau": 86
+ },
+ {
+  "id": 6475,
+  "nom": "Casque Cassé du Chafer",
+  "niveau": 40
+ },
+ {
+  "id": 6740,
+  "nom": "Peau de Tivelo",
+  "niveau": 86
+ },
+ {
+  "id": 7030,
+  "nom": "Peau de Krambwork",
+  "niveau": 86
+ },
+ {
+  "id": 8086,
+  "nom": "Coiffe déchiquetée de Drakoalak",
+  "niveau": 94
+ },
+ {
+  "id": 8390,
+  "nom": "Peau de Cochon de Farle",
+  "niveau": 94
+ },
+ {
+  "id": 8391,
+  "nom": "Peau de Don Dorgan",
+  "niveau": 100
+ },
+ {
+  "id": 8495,
+  "nom": "Bourgeon d'Abraknyde Ancestral",
+  "niveau": 90
+ },
+ {
+  "id": 8557,
+  "nom": "Plume de Batofu",
+  "niveau": 40
+ },
+ {
+  "id": 9388,
+  "nom": "Feuille de Blop Royal",
+  "niveau": 60
+ },
+ {
+  "id": 11120,
+  "nom": "Cuir de Bouftonmouth",
+  "niveau": 112
+ },
+ {
+  "id": 11223,
+  "nom": "Plume du Timansot",
+  "niveau": 132
+ },
+ {
+  "id": 11224,
+  "nom": "Aile de Mansobèse",
+  "niveau": 132
+ },
+ {
+  "id": 11229,
+  "nom": "Poil de barbe du Shamansot",
+  "niveau": 132
+ },
+ {
+  "id": 11250,
+  "nom": "Poil de Chachachovage",
+  "niveau": 82
+ },
+ {
+  "id": 11254,
+  "nom": "Pince de Crabe Hijacob",
+  "niveau": 82
+ },
+ {
+  "id": 12075,
+  "nom": "Fiole de fumée de Nelween",
+  "niveau": 70
+ },
+ {
+  "id": 12737,
+  "nom": "Galet cramoisi",
+  "niveau": 50
+ },
+ {
+  "id": 13165,
+  "nom": "Duvet du Maître Corbac",
+  "niveau": 120
+ },
+ {
+  "id": 13366,
+  "nom": "Galet Lunaire",
+  "niveau": 100
+ },
+ {
+  "id": 14468,
+  "nom": "Barbe du Wa Wobot",
+  "niveau": 80
+ },
+ {
+  "id": 16152,
+  "nom": "Masque Brisé d'Araknotron",
+  "niveau": 82
+ },
+ {
+  "id": 18371,
+  "nom": "Carapace du Mantiscore",
+  "niveau": 80
+ },
+ {
+  "id": 21256,
+  "nom": "Griffe de Dragoeuf Albâtre",
+  "niveau": 70
+ },
+ {
+  "id": 21271,
+  "nom": "Cheveux de Draegnerys",
+  "niveau": 70
+ },
+ {
+  "id": 32568,
+  "nom": "Dent de Marzwel",
+  "niveau": 60
+ },
+ {
+  "id": 32570,
+  "nom": "Griffe de Tyranne",
+  "niveau": 80
+ },
+ {
+  "id": 32573,
+  "nom": "Poil de Simbadas",
+  "niveau": 90
+ },
+ {
+  "id": 2281,
+  "nom": "Tissu de Graboule",
+  "niveau": 86
+ },
+ {
+  "id": 2294,
+  "nom": "Viscères de Scarafeuille",
+  "niveau": 38
+ },
+ {
+  "id": 2543,
+  "nom": "Substrat de Fascine",
+  "niveau": 80
+ },
+ {
+  "id": 8755,
+  "nom": "Touffe rousse du Flib",
+  "niveau": 62
+ },
+ {
+  "id": 8761,
+  "nom": "Poudre explosive",
+  "niveau": 70
+ },
+ {
+  "id": 11238,
+  "nom": "Queue d'Écumouth",
+  "niveau": 130
+ },
+ {
+  "id": 11241,
+  "nom": "Poils de Smilomouth",
+  "niveau": 130
+ },
+ {
+  "id": 14635,
+  "nom": "Pépite",
+  "niveau": 1
+ },
+ {
+  "id": 32569,
+  "nom": "Rouage de Qil Bil",
+  "niveau": 70
+ }
+]

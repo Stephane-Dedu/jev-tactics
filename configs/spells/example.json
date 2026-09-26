@@ -1,0 +1,40 @@
+{
+  "placeholder": "sorts d'EXEMPLE, inventes. Utilisables en dry-run pour essayer la chaine, refuses sous --execute : le solveur planifierait sur des portees et des degats faux, puis appuierait sur de vraies touches.",
+  "spells": [
+    {
+      "name": "frappe",
+      "slot": 0,
+      "ap_cost": 3,
+      "range_min": 1,
+      "range_max": 1,
+      "needs_line_of_sight": true,
+      "max_casts_per_turn": 2,
+      "damage_min": 24,
+      "damage_max": 30
+    },
+    {
+      "name": "trait",
+      "slot": 2,
+      "ap_cost": 3,
+      "range_min": 2,
+      "range_max": 6,
+      "needs_line_of_sight": true,
+      "max_casts_per_turn": 2,
+      "max_casts_per_target": 1,
+      "damage_min": 18,
+      "damage_max": 22
+    },
+    {
+      "name": "souffle",
+      "slot": 3,
+      "ap_cost": 4,
+      "range_min": 1,
+      "range_max": 4,
+      "needs_line_of_sight": true,
+      "max_casts_per_turn": 1,
+      "area_radius": 1,
+      "damage_min": 14,
+      "damage_max": 18
+    }
+  ]
+}

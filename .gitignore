@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# ML / data
+data/**
+!data/.gitkeep
+*.pt
+*.pth
+*.onnx
+runs/
+wandb/
+mlruns/
+checkpoints/
+
+# Captures / replays (gros, non versionnés)
+*.png
+*.jpg
+*.mp4
+replays/
+# ... sauf les fixtures de test (petits crops de ROI, requis par pytest)
+!tests/fixtures/*.png
+
+# Secrets : la clé Jev ne doit jamais atteindre un dépôt public
+.env
+.env.*
+*.key
+
+# Tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# IDE / OS
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini

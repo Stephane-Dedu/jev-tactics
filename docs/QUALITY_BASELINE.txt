@@ -1,0 +1,8 @@
+# Base du cliquet qualite. Voir CLAUDE.md section 3.
+# La CI echoue sur toute erreur NOUVELLE. Ces comptes ne doivent que DECROITRE.
+# Regenerer apres une baisse :
+#   ruff check . ; mypy --strict src/
+#
+# Mesure le 2026-09-26, Python 3.11.9, ruff/mypy de .venv
+ruff=27
+mypy=65

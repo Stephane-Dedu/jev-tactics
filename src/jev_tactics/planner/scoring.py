@@ -101,6 +101,37 @@ KILL_BONUS = 60.0
 # 2,5 est donc retenu : meilleur dans les deux regimes, jamais pire sur aucune graine, et
 # a 1,6x de la falaise la plus proche connue -- la ou 3,0 n'en est qu'a 1,33x pour un gain
 # de 0,8 point.
+#
+# QUATRIEME MESURE : A PV ENNEMIS INCONNUS -- c'est-a-dire en jeu. Les trois campagnes
+# ci-dessus ont toutes tourne a `enemy_hp_known=True`, le defaut de l'arene. Or aucun
+# ennemi n'a jamais de PV lisibles en session, et la prudence est le SEUL terme encore
+# vivant dans ce regime (`KILL_BONUS` et `WOUNDED_WEIGHT` y sont inertes, cf. leur bloc et
+# `tests/test_weights_regime.py`). Elle y decide donc tout.
+#
+#     sacrieur.json (20 sorts), PV inconnus, 200 combats
+#     safety          0,0    0,5    1,0    1,5    2,5    4,0    8,0
+#     contraint      44,5%  57,3%  56,7%  54,0%  38,0%  36,7%  26,7%
+#     courant        87,0%  90,0%  90,0%  89,3%  84,0%  72,7%  58,7%
+#
+# Dix-neuf points separent 1,0 de 2,5 en regime contraint. Trois campagnes independantes
+# (100, 150 et 200 combats) donnent le meme classement.
+#
+# ET POURTANT LE DEFAUT N'EST PAS CHANGE. La meme mesure sur `example.json` (3 sorts)
+# inverse le resultat : 64,5 % a 2,5 contre 53,5 % a 1,0, soit ONZE POINTS DANS L'AUTRE
+# SENS. La valeur optimale ne depend pas que du regime de PV, elle depend de la PUISSANCE
+# DU KIT -- avec peu de degats on ne peut rien faire tomber, donc survivre paie ; avec
+# vingt sorts on tue vite, donc l'agressivite paie.
+#
+# Il n'existe donc pas de bonne constante, et en choisir une revient a regler le bot pour
+# un personnage. C'est un argument POUR le choix par tour : `planner/postures.py` propose
+# `degats` et `abri` cote a cote, et laisse le decideur trancher selon la position plutot
+# que selon une moyenne. Le balayage ci-dessus valide la mecanique des postures, il ne
+# designe pas un nouveau defaut.
+#
+# CAVEAT, a ne pas oublier en relisant ces chiffres : l'adversaire de l'arene FONCE
+# TOUJOURS (cf. `sim/combat.enemy_policy`). Contre un poursuivant systematique, reculer
+# est un tour perdu par construction. L'ampleur est donc surestimee, meme si le sens est
+# probablement juste -- les monstres du jeu poursuivent aussi.
 SAFETY_WEIGHT = 2.5
 # Penalites sur les ressources NON DEPENSEES. Leur role est de DEPARTAGER a egalite, et
 # elles doivent rester assez faibles pour ne jamais decider seules -- ce qu'elles ne

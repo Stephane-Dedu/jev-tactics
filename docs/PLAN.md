@@ -153,6 +153,61 @@ rencontre jamais. Les retuner a PV inconnus est desormais un chantier identifie 
 demande plus de combats que 40, l'intervalle actuel etant trop large pour regler quoi que
 ce soit.
 
+## Retuner `scoring.py` — mesure faite, defaut INCHANGE
+
+Le chantier ouvert par P2 est instruit. Resultat : il ne faut pas changer la constante.
+
+### Ce qui a ete trouve d'abord
+
+**Deux des six poids sont inertes en jeu.** `evaluate` se scinde sur `entity.hp_known` ;
+la prime de mise a mort et le plafonnement des degats vivent dans la branche « PV
+connus », que l'autre saute par un `continue`. Aucun ennemi n'ayant jamais de PV lisibles,
+cette branche n'est jamais prise.
+
+Mesure directe, meme etat, meme coup letal :
+
+| poids | PV connus | PV inconnus |
+|---|---|---|
+| `kill_bonus` 0 → 600 | 60 → 660 | **65 → 65** |
+| `wounded` 0 → 400 | 120 → 120 | **65 → 65** |
+| `safety` 0 → 12 | 120 → 120 | 60 → 84 |
+
+`KILL_BONUS` -- « le terme qui, seul, fait passer le taux de victoire de 0,6 % a 81 % », le
+plus documente du fichier, balaye sur trois regimes -- **ne decide rien de ce que le bot
+joue**. La prudence est le seul terme vivant, et elle decide donc tout.
+
+### Le balayage de la prudence
+
+`sacrieur.json`, PV inconnus, 200 combats (trois campagnes independantes, meme classement) :
+
+| safety | contraint | courant |
+|---|---|---|
+| 0,5–1,0 | **57 %** | **90 %** |
+| 2,5 *(defaut)* | 38 % | 84 % |
+| 8,0 | 27 % | 59 % |
+
+Dix-neuf points. `safety = 0` est en revanche *moins* bon que 0,5–1,0 : il y a bien un
+optimum, la prudence n'est pas inutile.
+
+### Pourquoi le defaut ne change pas
+
+La meme mesure sur `example.json` (3 sorts) **inverse le classement** : 64,5 % a 2,5
+contre 53,5 % a 1,0, soit onze points dans l'autre sens.
+
+La valeur optimale ne depend pas que du regime de PV : elle depend de la **puissance du
+kit**. Peu de degats, on ne fait rien tomber et survivre paie ; vingt sorts, on tue vite
+et l'agressivite paie. Il n'existe donc pas de bonne constante -- en figer une revient a
+regler le bot pour un personnage.
+
+**C'est un argument pour le choix PAR TOUR.** `postures.py` propose deja `degats` et
+`abri` cote a cote ; le balayage valide cette mecanique au lieu de designer un nouveau
+defaut. Et il releve la barre : un decideur doit choisir la prudence selon la position,
+ce qu'aucune constante ne fait.
+
+**Caveat** : l'adversaire de l'arene fonce toujours (`sim/combat.enemy_policy`). Contre un
+poursuivant systematique, reculer est un tour perdu par construction -- l'ampleur est
+surestimee, meme si le sens est probablement juste.
+
 ## P3 — Cassettes et premier appel reel
 
 1. Confronter `_from_sdk_result` au vrai `typesafe-sdk` (**D5**) et corriger la forme.

@@ -20,9 +20,10 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 from pathlib import Path
 from typing import Any, Protocol
+
+from jev_tactics.config import api_key as config_api_key
 
 DEFAULT_MODEL = "jev-latest"
 ENDPOINT = "https://api.typesafe.ai/v1/systemone"
@@ -96,7 +97,11 @@ class HttpTransport:
     def __init__(self, model: str = DEFAULT_MODEL, api_key: str | None = None,
                  timeout: float = 2.0, max_retries: int = 2):
         self.model = model
-        self.api_key = api_key or os.environ.get("TYPESAFE_API_KEY")
+        # `config.api_key` plutot que `os.environ` : il tente `.env` avant de conclure a
+        # une absence. Lire l'environnement directement rendait « cle absente » sur une
+        # machine ou le fichier existe -- et le fichier etait deja gitignore avant que
+        # quoi que ce soit ne sache le lire, donc l'erreur etait garantie.
+        self.api_key = api_key or config_api_key()
         self.timeout = timeout
         self.max_retries = max_retries
 

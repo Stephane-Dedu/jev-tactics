@@ -93,9 +93,25 @@ pytest -q
 Extras, au besoin : `jev` (appels reels, `typesafe-sdk`), `ocr` (fabrique les gabarits de
 chiffres), `action` (pilotage souris/clavier).
 
-Les appels reels demandent `TYPESAFE_API_KEY`. **Les tests n'en ont jamais besoin** :
-`ReplayTransport` rejoue des cassettes, dont la cle est un hachage de la requete — un
-refactor de la projection invalide la cassette au lieu de rejouer une reponse perimee.
+### La cle Jev
+
+```bash
+cp .env.example .env                  # puis renseigner TYPESAFE_API_KEY
+python scripts/jev_ping.py --check    # verifie cle + SDK, SANS appeler
+python scripts/jev_ping.py            # un appel reel, quelques millimes
+```
+
+L'environnement reel a **priorite** sur `.env` : une variable deja exportee n'est jamais
+ecrasee, pour que la CI et les essais ponctuels gardent la main. `.env` est gitignore.
+
+`jev_ping.py` verifie trois choses qui cassent independamment : que la cle est lue, que la
+forme de la reponse correspond a ce que `transport._from_sdk_result` attend — ecrit
+d'apres la documentation, **sans jamais voir le SDK** — et la latence reelle, qui n'est
+pas mesuree alors que les budgets de tour sont poses par analogie.
+
+**Les tests n'ont jamais besoin de cle** : `ReplayTransport` rejoue des cassettes, dont la
+cle est un hachage de la requete — un refactor de la projection invalide la cassette au
+lieu de rejouer une reponse perimee.
 
 ## Securite
 

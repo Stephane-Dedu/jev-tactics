@@ -55,10 +55,23 @@ est au plan (`docs/PLAN.md`, P4) ; d'ici la, ne pas lire « vert » comme « cou
 ## Le faire jouer
 
 ```bash
-python scripts/play.py --goto 7,3                 # DRY-RUN : rien ne bouge
-python scripts/play.py --goto 7,3 --execute       # pilote vraiment
+# 1. la perception voit-elle quelque chose ? (jeu au premier plan)
+python scripts/observe.py --live
+python scripts/inspect_board.py --live
+
+# 2. se deplacer -- DRY-RUN par defaut, rien ne bouge
+python scripts/play.py --goto 7,3
+python scripts/play.py --goto 7,3 --execute
+
+# 3. combattre (en combat, avec la barre de sorts decrite)
 python scripts/play.py --fight --keys Ravage=1,Hostilite=2 --execute
 ```
+
+`--execute` demande l'extra `action` : `pip install -e ".[action]"`.
+
+Les scripts `--live` attendent que la fenetre du jeu soit au premier plan avant de
+capturer. Ceux qui prennent un fichier (`read_ui.py`, `bench.py --image`) travaillent sur
+une capture stockee, pas sur l'ecran.
 
 **Dry-run par defaut.** Le script clique et appuie sur des touches dans une fenetre de
 jeu ; le defaut inverse transformerait une faute de frappe en session pilotee. Il attend

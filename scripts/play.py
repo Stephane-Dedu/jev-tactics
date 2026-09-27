@@ -86,12 +86,24 @@ def make_backend(execute: bool):
     """
     if not execute:
         return DryRunBackend()
+
+    # LA CONSTRUCTION EST DANS LE TRY, pas seulement l'import de la classe.
+    #
+    # `DirectInputBackend` est definie dans `action/mouse.py` et s'importe toujours ; c'est
+    # son `__init__` qui fait `import pydirectinput`. Garder l'import de la classe ne
+    # capturait donc rien, et l'utilisateur recevait une trace de pile a la place du
+    # message qui dit quoi installer. Le garde-fou existait et ne gardait rien -- meme
+    # forme que le lint jamais lance.
     try:
         from jev_tactics.action.mouse import DirectInputBackend
+
+        return DirectInputBackend()
     except ImportError as exc:  # pragma: no cover - depend de l'environnement
         raise SystemExit(
-            'pilotage indisponible : `pip install -e ".[action]"`') from exc
-    return DirectInputBackend()
+            f"pilotage indisponible ({exc.name} manquant) : installer l'extra action\n"
+            f'    pip install -e ".[action]"\n'
+            f"Sans lui, retirer --execute : le dry-run montre ce qui serait joue."
+        ) from exc
 
 
 def read_state_for(board):
@@ -185,13 +197,20 @@ def main() -> None:
     mode = "EXECUTION" if args.execute else "dry-run (rien ne bouge)"
     print(f"\n  mode : {mode}")
 
-    code = 0
-    if args.goto:
-        code |= do_goto(args, backend)
-    if args.route:
-        code |= do_route(args, backend)
-    if args.fight:
-        code |= do_fight(args, backend)
+    with ScreenCapture() as capture:
+        # L'ORIGINE EST VERIFIEE AVANT DE PILOTER, et seulement alors : en dry-run rien
+        # n'est clique, donc un moniteur decale est sans consequence.
+        if args.execute and not check_origin(capture):
+            sys.exit(2)
+        grab = make_grab(capture)
+
+        code = 0
+        if args.goto:
+            code |= do_goto(args, backend, grab)
+        if args.route:
+            code |= do_route(args, backend, grab)
+        if args.fight:
+            code |= do_fight(args, backend, grab)
     sys.exit(code)
 
 
